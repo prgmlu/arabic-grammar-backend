@@ -1,0 +1,157 @@
+from django.contrib import admin
+from django.urls import include, path
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api/', include('rules_app.urls')),
+]
+
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('rules/', views.RuleList.as_view()),
+    path('rules/<int:pk>/', views.RuleDetail.as_view()),
+]
+
+from rest_framework import generics
+from .models import Rule
+from .serializers import RuleSerializer
+
+class RuleList(generics.ListCreateAPIView):
+    queryset = Rule.objects.all()
+    serializer_class = RuleSerializer
+
+class RuleDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Rule.objects.all()
+    serializer_class = RuleSerializer
+
+
+from django.db import models
+
+# in your Rule model
+class Rule(models.Model):
+    topic = models.CharField(max_length=200)
+    rule = models.CharField(max_length=500)
+    highlightColor = models.CharField(max_length=7)
+    sound = models.URLField()
+
+    def __str__(self):
+        return f"{self.topic}" 
+
+# in your Example model
+class Example(models.Model):
+    rule = models.ForeignKey(Rule, related_name='examples', on_delete=models.CASCADE)
+    sentence = models.CharField(max_length=500)
+    highlightedIndices = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.sentence[:50]}"  # Returns the first 50 characters of the sentence
+
+from rest_framework import serializers
+from .models import Rule, Example
+
+class ExampleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Example
+        fields = ['id', 'sentence', 'highlightedIndices']
+
+class RuleSerializer(serializers.ModelSerializer):
+    examples = ExampleSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Rule
+        fields = ['id', 'topic', 'rule', 'highlightColor', 'sound', 'examples']
+
+
+# management/commandspopulate_db.py
+from django.core.management.base import BaseCommand
+from rules_app.models import Rule, Example
+
+class Command(BaseCommand):
+    help = 'Populates the database with mocked data'
+
+    def handle(self, *args, **options):
+        mock_data = [
+            {
+                "id": 1,
+                "topic": "Noun Case Endings",
+                "rule": "In Arabic, nouns can have different case endings...",
+                "highlightColor": "#FF0000",
+                "sound": "https://cdn.obsess-vr.com/RT3DTest/VFX/Audio/WalkSound.mp4",
+                "examples": [
+                    {
+                        "sentence": "This is a test sentence.",
+                        "highlightedIndices": [0, 1, 2],
+                    },
+                    {
+                        "sentence": "This is another test sentence.",
+                        "highlightedIndices": [5, 6, 7],
+                    }
+                ]
+            },
+            {
+                "id": 2,
+                "topic": "Verb Conjugation",
+                "rule": "Arabic verbs change based on the subject...",
+                "highlightColor": "#00FF00",
+                "sound": "https://cdn.obsess-vr.com/RT3DTest/VFX/Audio/WalkSound.mp4",
+                "examples": [
+                    {
+                        "sentence": "This is a test sentence for verb conjugation.",
+                        "highlightedIndices": [0, 1, 2],
+                    },
+                    {
+                        "sentence": "This is another test sentence for verb conjugation.",
+                        "highlightedIndices": [5, 6, 7],
+                    }
+                ]
+            },
+            {
+                "id": 3,
+                "topic": "Adjective Agreement",
+                "rule": "Adjectives in Arabic agree with the noun they modify...",
+                "highlightColor": "#0000FF",
+                "sound": "https://cdn.obsess-vr.com/RT3DTest/VFX/Audio/WalkSound.mp4",
+                "examples": [
+                    {
+                        "sentence": "This is a test sentence for adjective agreement.",
+                        "highlightedIndices": [0, 1, 2],
+                    },
+                    {
+                        "sentence": "This is another test sentence for adjective agreement.",
+                        "highlightedIndices": [5, 6, 7],
+                    }
+                ]
+            }
+        ]
+
+        for rule in mock_data:
+            new_rule = Rule.objects.create(
+                topic=rule["topic"],
+                rule=rule["rule"],
+                highlightColor=rule["highlightColor"],
+                sound=rule["sound"]
+            )
+            for example in rule["examples"]:
+                Example.objects.create(
+                    rule=new_rule,
+                    sentence=example["sentence"],
+                    highlightedIndices=','.join(str(i) for i in example["highlightedIndices"])
+                )
+        self.stdout.write(self.style.SUCCESS('Successfully populated database'))
+
+
+from django.contrib import admin
+from .models import Rule, Example
+
+admin.site.register(Rule)
+admin.site.register(Example)
+
+
+from django.apps import AppConfig
+
+
+class RulesAppConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'rules_app'
