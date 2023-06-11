@@ -8,8 +8,9 @@
 # sqlite3 database
 db.sqlite3
 
-# __pycache__
+# __pycache__ and .pyc files
 **/__pycache__/
+**/*.pyc
 
 # virtual env
 /env
