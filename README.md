@@ -18,15 +18,12 @@ Activate the virtual environment:
 On Windows, use env\Scripts\activate
 On Unix or MacOS, use source env/bin/activate
 Step 3: Install the dependencies
-After you've activated the virtual environment, install the project dependencies with:
+After you've activated the virtual environment, install the project dependencies and initialize with:
 
-pip install -r requirements.txt
-
-python manage.py migrate
-
-python manage.py populate_db
+pip install -r requirements.txt;  manage.py makemigrations; python manage.py migrate; python manage.py populate_db
 
 python manage.py createsuperuser
+
 The Django Admin Interface can be accessed at http://127.0.0.1:8000/admin/.
 
 python manage.py runserver
