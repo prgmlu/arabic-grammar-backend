@@ -12,7 +12,11 @@ On Windows, use env\Scripts\activate
 On Unix or MacOS, use source env/bin/activate
 
 init, create admin user:
-`pip install -r requirements.txt;  manage.py makemigrations; python manage.py migrate; python manage.py populate_db; python manage.py createsuperuser`
+pip install -r requirements.txt
+manage.py makemigrations
+python manage.py migrate
+python manage.py populate_db
+python manage.py createsuperuser`
 
 
 The Django Admin Interface can be accessed at http://127.0.0.1:8000/admin/.

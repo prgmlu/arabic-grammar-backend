@@ -9,8 +9,15 @@
 db.sqlite3
 
 # __pycache__ and .pyc files
-**/__pycache__/*.pyc
-**/*.pyc
+__pycache__/
+**/__pycache__/
+/**/__pycache__/
+__pycache__
+**/__pycache__
+/**/__pycache__
+
+*.py[cod]
+
 
 # virtual env
 /env
