@@ -5,9 +5,8 @@ This is a simple Django-based API backend for managing language rules and exampl
 ### Step 1: Clone the repository
 
 ```bash
-`
 git clone https://github.com/prgmlu/arabic-grammar-backend.git; cd arabic-grammar-backend; python3 -m venv env
-`
+```
 
 On Windows, use env\Scripts\activate
 On Unix or MacOS, use source env/bin/activate
