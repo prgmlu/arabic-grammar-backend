@@ -5,6 +5,12 @@
 /.pnp
 .pnp.js
 
+# sqlite3 database
+db.sqlite3
+
+# __pycache__
+**/__pycache__/
+
 # virtual env
 /env
 
