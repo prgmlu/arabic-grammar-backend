@@ -20,9 +20,9 @@ manage.py makemigrations;
 python manage.py migrate;
 python manage.py populate_db;
 python manage.py createsuperuser;
+`python manage.py runserver`
 ```
 
 The Django Admin Interface can be accessed at http://127.0.0.1:8000/admin/.
-`python manage.py runserver`
 
 The API will be served at http://127.0.0.1:8000/. You can access the API at http://127.0.0.1:8000/api/rules/.
