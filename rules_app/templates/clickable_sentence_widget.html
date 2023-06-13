@@ -1,0 +1,47 @@
+<!-- templates/clickable_sentence_widget.html -->
+{% load static %}
+
+<textarea id="{{ widget.attrs.id }}" name="{{ widget.name }}">{{ widget.value }}</textarea>
+<div id="{{ widget.attrs.id }}-display"></div>
+
+<script src="{% static 'admin/js/vendor/jquery/jquery.min.js' %}"></script>
+<script>
+  (function($) {
+    $(document).ready(function() {
+      var sentenceField = $('#id_sentence');
+      var displayDiv = $('#{{ widget.attrs.id }}-display');
+
+      function createClickableSpans(sentence) {
+        displayDiv.empty();
+        for (var i = 0; i < sentence.length; i++) {
+          var span = $('<span>').text(sentence[i]).data('index', i).click(onSpanClick);
+          displayDiv.append(span);
+        }
+      }
+
+      function onSpanClick() {
+        var index = $(this).data('index');
+        var highlightedIndices = $('#id_highlightedIndices').val().split(',');
+
+        var indexPosition = highlightedIndices.indexOf(index.toString());
+        if (indexPosition === -1) {
+          highlightedIndices.push(index);
+          $('#id_highlightedIndices').val(highlightedIndices.join(','));
+          $(this).css('background-color', 'yellow');
+        } else {
+          highlightedIndices.splice(indexPosition, 1);
+          $('#id_highlightedIndices').val(highlightedIndices.join(','));
+          $(this).css('background-color', '');
+        }
+  }
+
+
+      sentenceField.on('input', function() {
+        createClickableSpans(sentenceField.val());
+      });
+
+      // Create spans for the initial sentence
+      createClickableSpans(sentenceField.val());
+    });
+  })(django.jQuery);
+</script>
