@@ -5,8 +5,8 @@ This is a simple Django-based API backend for managing language rules and exampl
 ### Step 1: Clone the repository
 
 ```bash
-git clone https://github.com/prgmlu/arabic-grammar-backend.git
-;cd arabic-grammar-backend;
+git clone https://github.com/prgmlu/arabic-grammar-backend.git;
+cd arabic-grammar-backend;
 python3 -m venv env
 ```
 
@@ -16,12 +16,13 @@ On Unix or MacOS, use source env/bin/activate
 init, create admin user:
 ```bash
 pip install -r requirements.txt;
-manage.py makemigrations;
+python manage.py makemigrations;
 python manage.py migrate;
 python manage.py populate_db;
 python manage.py createsuperuser;
 python manage.py runserver
 ```
+**Note** if you on linux replace `python` by `python3`.
 
 The Django Admin Interface can be accessed at http://127.0.0.1:8000/admin/.
 
