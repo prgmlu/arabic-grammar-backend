@@ -12,12 +12,17 @@
       var displayDiv = $('#{{ widget.attrs.id }}-display');
 
       function createClickableSpans(sentence) {
-        displayDiv.empty();
-        for (var i = 0; i < sentence.length; i++) {
-          var span = $('<span>').text(sentence[i]).data('index', i).click(onSpanClick);
-          displayDiv.append(span);
+    displayDiv.empty();
+    var highlightedIndices = $('#id_highlightedIndices').val().split(',');
+    for (var i = 0; i < sentence.length; i++) {
+        var span = $('<span>').text(sentence[i]).data('index', i).click(onSpanClick);
+        // If the index is in the highlightedIndices array, highlight the span
+        if (highlightedIndices.indexOf(i.toString()) !== -1) {
+            span.css('background-color', 'yellow');
         }
-      }
+        displayDiv.append(span);
+    }
+}
 
       function onSpanClick() {
         var index = $(this).data('index');
