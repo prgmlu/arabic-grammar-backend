@@ -10,13 +10,9 @@ db.sqlite3
 
 # __pycache__ and .pyc files
 __pycache__/
-**/__pycache__/
-/**/__pycache__/
-__pycache__
-**/__pycache__
-/**/__pycache__
-*.pyc
-*.pyo
+*.py[cod]
+*$py.class
+
 
 *.py[cod]
 
