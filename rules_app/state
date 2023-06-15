@@ -142,16 +142,117 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('Successfully populated database'))
 
 
+# rules_app/admin.py
 from django.contrib import admin
 from .models import Rule, Example
+from .forms import ExampleForm
+
+class ExampleAdmin(admin.ModelAdmin):
+    form = ExampleForm
+
+    class Media:
+        js = ('example_admin.js',)  # Path to your JavaScript file
 
 admin.site.register(Rule)
-admin.site.register(Example)
+admin.site.register(Example, ExampleAdmin)
 
 
-from django.apps import AppConfig
+# rules_app/forms.py
+from django import forms
+from .models import Example
+
+class ClickableSentenceWidget(forms.TextInput):
+    template_name = 'clickable_sentence_widget.html'
+
+class ExampleForm(forms.ModelForm):
+    class Meta:
+        model = Example
+        fields = ['sentence', 'highlightedIndices', 'rule']  # Include all fields that you want in the form
+        widgets = {
+            'sentence': ClickableSentenceWidget(),
+        }
+
+// static/example_admin.js
+$(document).ready(function() {
+    var sentence = $('#id_sentence').val();
+    var displayDiv = $('#id_sentence-display');
+
+    // Convert sentence into clickable spans
+    for (var i = 0; i < sentence.length; i++) {
+        var span = $('<span>').text(sentence[i]).data('index', i).click(onSpanClick);
+        displayDiv.append(span);
+    }
+});
+
+function onSpanClick() {
+    var index = $(this).data('index');
+    var highlightedIndices = $('#id_highlightedIndices').val().split(',');
+
+    var indexPosition = highlightedIndices.indexOf(index.toString());
+    if (indexPosition === -1) {
+        highlightedIndices.push(index);
+        $('#id_highlightedIndices').val(highlightedIndices.join(','));
+        // Highlight the clicked span
+        $(this).css('background-color', 'yellow');
+    } else {
+        highlightedIndices.splice(indexPosition, 1);
+        $('#id_highlightedIndices').val(highlightedIndices.join(','));
+        // Un-highlight the clicked span
+        $(this).css('background-color', '');
+    }
+}
 
 
-class RulesAppConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'rules_app'
+
+<!-- templates/clickable_sentence_widget.html -->
+{% load static %}
+
+<textarea id="{{ widget.attrs.id }}" name="{{ widget.name }}">{{ widget.value }}</textarea>
+<div id="{{ widget.attrs.id }}-display"></div>
+
+<script src="{% static 'admin/js/vendor/jquery/jquery.min.js' %}"></script>
+<script>
+  (function($) {
+    $(document).ready(function() {
+      var sentenceField = $('#id_sentence');
+      var displayDiv = $('#{{ widget.attrs.id }}-display');
+
+      function createClickableSpans(sentence) {
+    displayDiv.empty();
+    var highlightedIndices = $('#id_highlightedIndices').val().split(',');
+    for (var i = 0; i < sentence.length; i++) {
+        var span = $('<span>').text(sentence[i]).data('index', i).click(onSpanClick);
+        // If the index is in the highlightedIndices array, highlight the span
+        if (highlightedIndices.indexOf(i.toString()) !== -1) {
+            span.css('background-color', 'yellow');
+        }
+        displayDiv.append(span);
+    }
+}
+
+      function onSpanClick() {
+        var index = $(this).data('index');
+        var highlightedIndices = $('#id_highlightedIndices').val().split(',');
+
+        var indexPosition = highlightedIndices.indexOf(index.toString());
+        if (indexPosition === -1) {
+          highlightedIndices.push(index);
+          $('#id_highlightedIndices').val(highlightedIndices.join(','));
+          $(this).css('background-color', 'yellow');
+        } else {
+          highlightedIndices.splice(indexPosition, 1);
+          $('#id_highlightedIndices').val(highlightedIndices.join(','));
+          $(this).css('background-color', '');
+        }
+  }
+
+
+      sentenceField.on('input', function() {
+        createClickableSpans(sentenceField.val());
+      });
+
+      // Create spans for the initial sentence
+      createClickableSpans(sentenceField.val());
+    });
+  })(django.jQuery);
+</script>

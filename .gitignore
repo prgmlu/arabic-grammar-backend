@@ -5,6 +5,20 @@
 /.pnp
 .pnp.js
 
+# sqlite3 database
+db.sqlite3
+
+# __pycache__ and .pyc files
+__pycache__/
+*.py[cod]
+*.pyc
+*$py.class
+**/__pycache__/
+**/__pycache__/**
+
+
+
+
 # virtual env
 /env
 
@@ -24,3 +38,19 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+backend/__pycache__/__init__.cpython-38.pyc
+backend/__pycache__/settings.cpython-38.pyc
+backend/__pycache__/urls.cpython-38.pyc
+backend/__pycache__/wsgi.cpython-38.pyc
+rules_app/__pycache__/__init__.cpython-38.pyc
+rules_app/__pycache__/admin.cpython-38.pyc
+rules_app/__pycache__/apps.cpython-38.pyc
+rules_app/__pycache__/models.cpython-38.pyc
+rules_app/__pycache__/serializers.cpython-38.pyc
+rules_app/__pycache__/urls.cpython-38.pyc
+rules_app/__pycache__/views.cpython-38.pyc
+rules_app/migrations/__pycache__/__init__.cpython-38.pyc
+rules_app/migrations/__pycache__/0001_initial.cpython-38.pyc
+backend/__pycache__/__init__.cpython-38.pyc
+.DS_Store
+db.sqlite3
