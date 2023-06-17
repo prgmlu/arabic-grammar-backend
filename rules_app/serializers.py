@@ -4,7 +4,7 @@ from .models import Rule, Example
 class ExampleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Example
-        fields = ['id', 'sentence', 'highlightedIndices']
+        fields = ['id', 'sentence', 'highlightedIndices', 'audio_file']
 
 class RuleSerializer(serializers.ModelSerializer):
     examples = ExampleSerializer(many=True, read_only=True)

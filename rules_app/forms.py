@@ -8,7 +8,7 @@ class ClickableSentenceWidget(forms.TextInput):
 class ExampleForm(forms.ModelForm):
     class Meta:
         model = Example
-        fields = ['sentence', 'highlightedIndices', 'rule']  # Include all fields that you want in the form
+        fields = ['sentence', 'highlightedIndices', 'rule', 'audio_file']  # Include all fields that you want in the form
         widgets = {
             'sentence': ClickableSentenceWidget(),
         }

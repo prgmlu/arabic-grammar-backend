@@ -1,31 +1,24 @@
 from django.contrib import admin
 from django.urls import include, path
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('rules_app.urls')),
 ]
-
 from django.urls import path
 from . import views
-
 urlpatterns = [
     path('rules/', views.RuleList.as_view()),
     path('rules/<int:pk>/', views.RuleDetail.as_view()),
 ]
-
 from rest_framework import generics
 from .models import Rule
 from .serializers import RuleSerializer
-
 class RuleList(generics.ListCreateAPIView):
     queryset = Rule.objects.all()
     serializer_class = RuleSerializer
-
 class RuleDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Rule.objects.all()
     serializer_class = RuleSerializer
-
 
 from django.db import models
 
@@ -44,6 +37,7 @@ class Example(models.Model):
     rule = models.ForeignKey(Rule, related_name='examples', on_delete=models.CASCADE)
     sentence = models.CharField(max_length=500)
     highlightedIndices = models.CharField(max_length=100)
+    audio_file = models.FileField(upload_to='audio/')  # New field
 
     def __str__(self):
         return f"{self.sentence[:50]}"  # Returns the first 50 characters of the sentence
@@ -54,7 +48,7 @@ from .models import Rule, Example
 class ExampleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Example
-        fields = ['id', 'sentence', 'highlightedIndices']
+        fields = ['id', 'sentence', 'highlightedIndices', 'audio_file']
 
 class RuleSerializer(serializers.ModelSerializer):
     examples = ExampleSerializer(many=True, read_only=True)
@@ -68,9 +62,29 @@ class RuleSerializer(serializers.ModelSerializer):
 import csv
 import os
 from django.core.management.base import BaseCommand
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from rules_app.models import Rule, Example
 from django.conf import settings
 import random
+from google.cloud import texttospeech
+
+def get_audio(sentence, filename):
+    client = texttospeech.TextToSpeechClient()
+    synthesis_input = texttospeech.SynthesisInput(text=sentence)
+    voice = texttospeech.VoiceSelectionParams(
+        language_code="ar-XA", ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL
+    )
+    audio_config = texttospeech.AudioConfig(audio_encoding=texttospeech.AudioEncoding.MP3)
+    response = client.synthesize_speech(input=synthesis_input, voice=voice, audio_config=audio_config)
+
+    file_path = os.path.join(settings.MEDIA_ROOT, 'audio', filename)  # <--- This line is modified
+
+    with open(file_path, "wb") as out:
+        out.write(response.audio_content)
+        print(f'Audio content written to file "{file_path}"')
+
+    return file_path
 
 def get_random_color():
     return "#{:06x}".format(random.randint(0, 0xFFFFFF))
@@ -108,27 +122,25 @@ class Command(BaseCommand):
         for row in data[1:]:
             sentence = row[0]
             highlighted_indices = sorted(random.sample(range(len(sentence)), k=len(sentence)//10))
+            audio_filename = f"{new_rule.topic}_{sentence[:10].replace(' ', '_')}.mp3"
+            get_audio(sentence, audio_filename)
             Example.objects.create(
                 rule=new_rule,
                 sentence=sentence,
-                highlightedIndices=','.join(str(i) for i in highlighted_indices)
+                highlightedIndices=','.join(str(i) for i in highlighted_indices),
+                audio_file=os.path.join('audio', audio_filename)
             )
-
 
 # rules_app/admin.py
 from django.contrib import admin
 from .models import Rule, Example
 from .forms import ExampleForm
-
 class ExampleAdmin(admin.ModelAdmin):
     form = ExampleForm
-
     class Media:
         js = ('example_admin.js',)  # Path to your JavaScript file
-
 admin.site.register(Rule)
 admin.site.register(Example, ExampleAdmin)
-
 
 # rules_app/forms.py
 from django import forms
@@ -140,7 +152,7 @@ class ClickableSentenceWidget(forms.TextInput):
 class ExampleForm(forms.ModelForm):
     class Meta:
         model = Example
-        fields = ['sentence', 'highlightedIndices', 'rule']  # Include all fields that you want in the form
+        fields = ['sentence', 'highlightedIndices', 'rule', 'audio_file']  # Include all fields that you want in the form
         widgets = {
             'sentence': ClickableSentenceWidget(),
         }
@@ -149,18 +161,15 @@ class ExampleForm(forms.ModelForm):
 $(document).ready(function() {
     var sentence = $('#id_sentence').val();
     var displayDiv = $('#id_sentence-display');
-
     // Convert sentence into clickable spans
     for (var i = 0; i < sentence.length; i++) {
         var span = $('<span>').text(sentence[i]).data('index', i).click(onSpanClick);
         displayDiv.append(span);
     }
 });
-
 function onSpanClick() {
     var index = $(this).data('index');
     var highlightedIndices = $('#id_highlightedIndices').val().split(',');
-
     var indexPosition = highlightedIndices.indexOf(index.toString());
     if (indexPosition === -1) {
         highlightedIndices.push(index);
@@ -175,21 +184,16 @@ function onSpanClick() {
     }
 }
 
-
-
 <!-- templates/clickable_sentence_widget.html -->
 {% load static %}
-
 <textarea id="{{ widget.attrs.id }}" name="{{ widget.name }}">{{ widget.value }}</textarea>
 <div id="{{ widget.attrs.id }}-display"></div>
-
 <script src="{% static 'admin/js/vendor/jquery/jquery.min.js' %}"></script>
 <script>
   (function($) {
     $(document).ready(function() {
       var sentenceField = $('#id_sentence');
       var displayDiv = $('#{{ widget.attrs.id }}-display');
-
       function createClickableSpans(sentence) {
     displayDiv.empty();
     var highlightedIndices = $('#id_highlightedIndices').val().split(',');
@@ -202,11 +206,9 @@ function onSpanClick() {
         displayDiv.append(span);
     }
 }
-
       function onSpanClick() {
         var index = $(this).data('index');
         var highlightedIndices = $('#id_highlightedIndices').val().split(',');
-
         var indexPosition = highlightedIndices.indexOf(index.toString());
         if (indexPosition === -1) {
           highlightedIndices.push(index);
@@ -219,11 +221,9 @@ function onSpanClick() {
         }
   }
 
-
       sentenceField.on('input', function() {
         createClickableSpans(sentenceField.val());
       });
-
       // Create spans for the initial sentence
       createClickableSpans(sentenceField.val());
     });
